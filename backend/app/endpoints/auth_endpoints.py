@@ -3,6 +3,7 @@ from ..database import get_db
 from ..auth import hash_password, generate_token, auth_required
 
 auth_bp = Blueprint('auth', __name__)
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
     try:
