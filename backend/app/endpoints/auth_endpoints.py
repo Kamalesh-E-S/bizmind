@@ -1,24 +1,29 @@
 from flask import Blueprint, request, jsonify
 from ..database import get_db
 from ..auth import hash_password, generate_token, auth_required
+import logging
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
+    logger = logging.getLogger("market_research_api")
     try:
         data = request.get_json()
-        username = data.get("username")
-        password = data.get("password")
-        email = data.get("email")
-        business_name = data.get("business_name", "")
+        logger.info(f"Register attempt: {data}")
+        username = str(data.get("username", "")).strip()
+        password = str(data.get("password", "")).strip()
+        email = str(data.get("email", "")).strip()
+        business_name = str(data.get("business_name", "")).strip()
         if not username or not password or not email:
+            logger.warning("Registration failed: missing required fields")
             return jsonify({"error": "Username, password, and email are required"}), 400
         db = get_db()
         cursor = db.cursor()
         cursor.execute("SELECT * FROM users WHERE username = ? OR email = ?", (username, email))
         existing_user = cursor.fetchone()
         if existing_user:
+            logger.warning(f"Registration failed: user exists {username} / {email}")
             return jsonify({"error": "Username or email already exists"}), 409
         password_hash = hash_password(password)
         cursor.execute(
@@ -28,12 +33,14 @@ def register():
         db.commit()
         user_id = cursor.lastrowid
         token = generate_token(user_id)
+        logger.info(f"User registered: {username} ({user_id})")
         return jsonify({
             "message": "User registered successfully",
             "user_id": user_id,
             "token": token
         })
     except Exception as e:
+        logger.error(f"Registration error: {e}")
         return jsonify({"error": str(e)}), 500
 
 @auth_bp.route('/login', methods=['POST'])
