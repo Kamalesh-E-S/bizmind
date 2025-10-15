@@ -1,6 +1,7 @@
 import googlemaps
 import pandas as pd
 from flask import current_app
+import time
 
 def get_gmaps_client():
     return googlemaps.Client(key=current_app.config['GOOGLE_MAPS_API_KEY'])
@@ -22,30 +23,81 @@ def geocode_location(location):
     except Exception as e:
         return None, f"Geocoding error: {str(e)}"
 
+def get_place_reviews(place_id):
+    """
+    Fetch up to 5 reviews from the Google Places Details API for a specific place.
+    Returns both highest-rated and lowest-rated reviews sorted by rating.
+    """
+    gmaps = get_gmaps_client()
+    try:
+        details = gmaps.place(place_id=place_id, fields=["reviews", "name"])
+        reviews = details.get("result", {}).get("reviews", [])
+
+        if not reviews:
+            return [], []
+
+        # Sort reviews by rating
+        sorted_reviews = sorted(reviews, key=lambda r: r.get("rating", 0), reverse=True)
+
+        # Extract top 5 highest-rated and 5 lowest-rated reviews
+        top_reviews = [
+            {
+                "author": r.get("author_name"),
+                "rating": r.get("rating"),
+                "text": r.get("text"),
+                "time": r.get("time")
+            }
+            for r in sorted_reviews[:5]
+        ]
+        least_reviews = [
+            {
+                "author": r.get("author_name"),
+                "rating": r.get("rating"),
+                "text": r.get("text"),
+                "time": r.get("time")
+            }
+            for r in sorted_reviews[-5:]
+        ]
+        return top_reviews, least_reviews
+
+    except Exception as e:
+        return [], []
+
 def get_nearby_places(location, place_type=None, keyword=None, radius=None):
     gmaps = get_gmaps_client()
     coords, error = geocode_location(location)
     if error:
         return None, error
+
     try:
         places_result = gmaps.places_nearby(
             location=(coords['lat'], coords['lng']),
-            radius=radius or current_app.config['MAPS_RADIUS'],
+            radius=radius or current_app.config.get('MAPS_RADIUS', 2000),
             type=place_type,
             keyword=keyword
         )
+
         places = []
         for place in places_result.get('results', []):
+            place_id = place.get('place_id')
+            top_reviews, least_reviews = get_place_reviews(place_id)
             places.append({
                 'name': place.get('name'),
-                'place_id': place.get('place_id'),
+                'place_id': place_id,
                 'lat': place['geometry']['location']['lat'],
                 'lng': place['geometry']['location']['lng'],
                 'rating': place.get('rating', 0),
                 'user_ratings_total': place.get('user_ratings_total', 0),
                 'vicinity': place.get('vicinity'),
-                'types': place.get('types', [])
+                'types': place.get('types', []),
+                'top_reviews': top_reviews,
+                'least_reviews': least_reviews
             })
+            print(places)
+            # Sleep to avoid hitting rate limits
+            time.sleep(0.2)
+
         return pd.DataFrame(places) if places else pd.DataFrame(), None
+
     except Exception as e:
         return None, f"Google Places API error: {str(e)}"

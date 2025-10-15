@@ -7,7 +7,7 @@ def call_groq_ai(prompt, system_message="You are a helpful business advisor."):
         "Content-Type": "application/json"
     }
     data = {
-        "model": "llama3-70b-8192",
+        "model": "llama-3.3-70b-versatile",
         "messages": [
             {"role": "system", "content": system_message},
             {"role": "user", "content": prompt}
