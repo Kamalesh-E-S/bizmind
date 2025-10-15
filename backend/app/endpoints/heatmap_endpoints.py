@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from ..auth import auth_required
-from ..google_maps import get_nearby_places, geocode_location
+from ..google_maps import get_nearby_places, geocode_location, suggest_low_density_zones  # 👈 import new function
 from ..utils import validate_location
 from ..database import get_db
 import json
@@ -47,5 +47,37 @@ def get_heatmap_data():
         )
         db.commit()
         return jsonify(response)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ✅ New endpoint: suggest 5 low-density zones
+@heatmap_bp.route('/suggest-locations')
+@auth_required
+def suggest_locations():
+    """
+    Suggest 5 coordinates where the selected store type has low density (ideal for new setup).
+    """
+    location = request.args.get("location", "")
+    category = request.args.get("category", "")
+    
+    if not location or not category:
+        return jsonify({"error": "Both 'location' and 'category' are required"}), 400
+
+    is_valid, error_msg = validate_location(location)
+    if not is_valid:
+        return jsonify({"error": error_msg}), 400
+
+    try:
+        suggestions, error = suggest_low_density_zones(location, store_type=category)
+        if error:
+            return jsonify({"error": error}), 500
+
+        return jsonify({
+            "base_location": location,
+            "category": category,
+            "suggested_zones": suggestions,
+            "count": len(suggestions)
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

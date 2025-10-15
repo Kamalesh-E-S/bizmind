@@ -62,6 +62,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/heatmap", label: "Heatmap", icon: Map },
     { href: "/dashboard/competitors", label: "Competitors", icon: Users },
+    { href: "/dashboard/suggest", label: "Suggest", icon: BarChart3 },
     { href: "/dashboard/reports", label: "Reports", icon: FileText },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ]
@@ -76,7 +77,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="md:hidden bg-white border-b p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-6 w-6 text-emerald-600" />
-          <span className="font-bold">MarketSense</span>
+          <span className="font-bold">BizMind</span>
         </div>
         <Button variant="ghost" size="icon" onClick={toggleMenu}>
           {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -94,7 +95,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="p-6">
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 className="h-6 w-6 text-emerald-600" />
-            <span className="font-bold">MarketSense</span>
+            <span className="font-bold">BizMind</span>
           </div>
 
           {/* User info */}
