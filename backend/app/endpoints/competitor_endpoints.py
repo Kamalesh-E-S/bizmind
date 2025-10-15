@@ -7,6 +7,21 @@ import json
 
 competitor_bp = Blueprint('competitor', __name__)
 
+# ...existing code...
+@competitor_bp.route('/api/nearby-places', methods=['GET'])
+@auth_required
+def nearby_places():
+    location = request.args.get('location')
+    place_type = request.args.get('type')
+    keyword = request.args.get('keyword')
+    radius = request.args.get('radius', type=int)
+    df, error = get_nearby_places(location, place_type, keyword, radius)
+    if error:
+        return jsonify({'error': error}), 400
+    # Convert DataFrame to list of dicts for JSON response
+    return jsonify(df.to_dict(orient='records'))
+# ...existing code...
+
 @competitor_bp.route('/competitor-insights')
 @auth_required
 def get_competitor_insights():

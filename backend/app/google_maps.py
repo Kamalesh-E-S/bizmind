@@ -36,10 +36,10 @@ def get_place_reviews(place_id):
         if not reviews:
             return [], []
 
-        # Sort reviews by rating
-        sorted_reviews = sorted(reviews, key=lambda r: r.get("rating", 0), reverse=True)
+        # Sort reviews by rating descending for top, ascending for least
+        sorted_reviews_desc = sorted(reviews, key=lambda r: r.get("rating", 0), reverse=True)
+        sorted_reviews_asc = sorted(reviews, key=lambda r: r.get("rating", 0))
 
-        # Extract top 5 highest-rated and 5 lowest-rated reviews
         top_reviews = [
             {
                 "author": r.get("author_name"),
@@ -47,7 +47,7 @@ def get_place_reviews(place_id):
                 "text": r.get("text"),
                 "time": r.get("time")
             }
-            for r in sorted_reviews[:5]
+            for r in sorted_reviews_desc[:5]
         ]
         least_reviews = [
             {
@@ -56,7 +56,7 @@ def get_place_reviews(place_id):
                 "text": r.get("text"),
                 "time": r.get("time")
             }
-            for r in sorted_reviews[-5:]
+            for r in sorted_reviews_asc[:5]
         ]
         return top_reviews, least_reviews
 
@@ -93,7 +93,6 @@ def get_nearby_places(location, place_type=None, keyword=None, radius=None):
                 'top_reviews': top_reviews,
                 'least_reviews': least_reviews
             })
-            print(places)
             # Sleep to avoid hitting rate limits
             time.sleep(0.2)
 

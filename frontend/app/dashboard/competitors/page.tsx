@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast"
 import DashboardLayout from "@/components/dashboard-layout"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 export default function CompetitorsPage() {
   const router = useRouter()
@@ -17,6 +18,8 @@ export default function CompetitorsPage() {
   const [location, setLocation] = useState("")
   const [category, setCategory] = useState("")
   const [competitorData, setCompetitorData] = useState<any>(null)
+  const [topExpanded, setTopExpanded] = useState<{ [key: number]: boolean }>({});
+  const [leastExpanded, setLeastExpanded] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
     // Check if user is logged in
@@ -205,42 +208,136 @@ export default function CompetitorsPage() {
                 </CardContent>
               </Card>
             </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Competitor Details</CardTitle>
-                <CardDescription>Detailed information about competitors in the area</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50 text-left">
-                        <th className="p-3 border-b">Name</th>
-                        <th className="p-3 border-b">Rating</th>
-                        <th className="p-3 border-b">Reviews</th>
-                        <th className="p-3 border-b">Address</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {competitorData.details.map((competitor: any, index: number) => (
-                        <tr key={index} className="border-b hover:bg-gray-50">
-                          <td className="p-3 font-medium">{competitor.name}</td>
-                          <td className="p-3">
-                            <div className="flex items-center">
-                              {competitor.rating || "N/A"}
-                              {competitor.rating && <Star className="h-4 w-4 text-yellow-500 ml-1" />}
-                            </div>
-                          </td>
-                          <td className="p-3">{competitor.user_ratings_total || 0}</td>
-                          <td className="p-3 text-gray-600">{competitor.vicinity}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+ <Card>
+    <CardHeader>
+      <CardTitle>Competitor Details</CardTitle>
+      <CardDescription>Detailed information about competitors in the area</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-left">
+              <th className="p-3 border-b">Name</th>
+              <th className="p-3 border-b">Rating</th>
+              <th className="p-3 border-b">Reviews</th>
+              <th className="p-3 border-b">Address</th>
+              <th className="p-3 border-b">Reviews Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {competitorData.details.map((competitor: any, index: number) => (
+              <tr key={index} className="border-b hover:bg-gray-50 align-top">
+                <td className="p-3 font-medium">{competitor.name}</td>
+                <td className="p-3">
+                  <div className="flex items-center">
+                    {competitor.rating || "N/A"}
+                    {competitor.rating && <Star className="h-4 w-4 text-yellow-500 ml-1" />}
+                  </div>
+                </td>
+                <td className="p-3">{competitor.user_ratings_total || 0}</td>
+                <td className="p-3 text-gray-600">{competitor.vicinity}</td>
+                <td className="p-3 min-w-[350px]">
+                  <div className="flex flex-col gap-4">
+                    {/* Top Reviews */}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-green-700">Top Reviews</span>
+                        <button
+                          className="p-1 rounded hover:bg-green-100 transition"
+                          onClick={() =>
+                            setTopExpanded((prev) => ({
+                              ...prev,
+                              [index]: !prev[index],
+                            }))
+                          }
+                          aria-label={topExpanded[index] ? "Collapse" : "Expand"}
+                        >
+                          {topExpanded[index] ? (
+                            <ChevronUp className="h-4 w-4 text-green-700" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-green-700" />
+                          )}
+                        </button>
+                      </div>
+                      <ul className="mt-1 space-y-2">
+                        {(competitor.top_reviews && competitor.top_reviews.length > 0) ? (
+                          (topExpanded[index]
+                            ? competitor.top_reviews
+                            : competitor.top_reviews.slice(0, 1)
+                          ).map((review: any, i: number) => (
+                            <li key={i} className="bg-green-50 rounded p-2 shadow-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{review.author}</span>
+                                <span className="text-yellow-600 flex items-center text-sm">
+                                  <Star className="h-3 w-3 mr-0.5" /> {review.rating}
+                                </span>
+                                <span className="text-xs text-gray-400 ml-auto">
+                                  {review.time ? new Date(review.time * 1000).toLocaleDateString() : ""}
+                                </span>
+                              </div>
+                              <div className="text-gray-700 text-sm mt-1">{review.text}</div>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-gray-400 text-sm">No top reviews</li>
+                        )}
+                      </ul>
+                    </div>
+                    {/* Least Reviews */}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-red-700">Least Reviews</span>
+                        <button
+                          className="p-1 rounded hover:bg-red-100 transition"
+                          onClick={() =>
+                            setLeastExpanded((prev) => ({
+                              ...prev,
+                              [index]: !prev[index],
+                            }))
+                          }
+                          aria-label={leastExpanded[index] ? "Collapse" : "Expand"}
+                        >
+                          {leastExpanded[index] ? (
+                            <ChevronUp className="h-4 w-4 text-red-700" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-red-700" />
+                          )}
+                        </button>
+                      </div>
+                      <ul className="mt-1 space-y-2">
+                        {(competitor.least_reviews && competitor.least_reviews.length > 0) ? (
+                          (leastExpanded[index]
+                            ? competitor.least_reviews
+                            : competitor.least_reviews.slice(0, 1)
+                          ).map((review: any, i: number) => (
+                            <li key={i} className="bg-red-50 rounded p-2 shadow-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{review.author}</span>
+                                <span className="text-yellow-600 flex items-center text-sm">
+                                  <Star className="h-3 w-3 mr-0.5" /> {review.rating}
+                                </span>
+                                <span className="text-xs text-gray-400 ml-auto">
+                                  {review.time ? new Date(review.time * 1000).toLocaleDateString() : ""}
+                                </span>
+                              </div>
+                              <div className="text-gray-700 text-sm mt-1">{review.text}</div>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-gray-400 text-sm">No least reviews</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </CardContent>
+  </Card>
           </div>
         )}
       </div>

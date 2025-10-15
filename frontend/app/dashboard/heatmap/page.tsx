@@ -9,94 +9,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast"
 import DashboardLayout from "@/components/dashboard-layout"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { GoogleMap, LoadScript, HeatmapLayer } from "@react-google-maps/api";
 
 // This would normally be loaded from a proper Maps library
 // For this demo, we'll create a simplified version
+const mapContainerStyle = {
+  width: "100%",
+  height: "400px",
+};
+
 const HeatmapVisualizer = ({ coordinates, center }: { coordinates: any[]; center: any }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  useEffect(() => {
-    if (!canvasRef.current || !coordinates.length) return
-
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    // Set canvas dimensions
-    canvas.width = 600
-    canvas.height = 400
-
-    // Calculate bounds
-    const lats = coordinates.map((c) => c.lat)
-    const lngs = coordinates.map((c) => c.lng)
-    const minLat = Math.min(...lats)
-    const maxLat = Math.max(...lats)
-    const minLng = Math.min(...lngs)
-    const maxLng = Math.max(...lngs)
-
-    // Add padding
-    const latPadding = (maxLat - minLat) * 0.1
-    const lngPadding = (maxLng - minLng) * 0.1
-
-    // Draw center point
-    const centerX = ((center.lng - minLng) / (maxLng - minLng + 2 * lngPadding)) * canvas.width
-    const centerY = ((maxLat - center.lat) / (maxLat - minLat + 2 * latPadding)) * canvas.height
-
-    ctx.fillStyle = "blue"
-    ctx.beginPath()
-    ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI)
-    ctx.fill()
-    ctx.fillStyle = "white"
-    ctx.font = "10px Arial"
-    ctx.textAlign = "center"
-    ctx.fillText("You", centerX, centerY + 4)
-
-    // Draw heatmap points
-    coordinates.forEach((coord) => {
-      const x = ((coord.lng - minLng) / (maxLng - minLng + 2 * lngPadding)) * canvas.width
-      const y = ((maxLat - coord.lat) / (maxLat - minLat + 2 * latPadding)) * canvas.height
-
-      ctx.fillStyle = "rgba(255, 0, 0, 0.5)"
-      ctx.beginPath()
-      ctx.arc(x, y, 10, 0, 2 * Math.PI)
-      ctx.fill()
-    })
-
-    // Draw legend
-    ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
-    ctx.fillRect(10, 10, 150, 60)
-
-    ctx.fillStyle = "white"
-    ctx.font = "12px Arial"
-    ctx.textAlign = "left"
-    ctx.fillText("Legend:", 20, 30)
-
-    ctx.fillStyle = "blue"
-    ctx.beginPath()
-    ctx.arc(30, 50, 6, 0, 2 * Math.PI)
-    ctx.fill()
-
-    ctx.fillStyle = "white"
-    ctx.fillText("Your location", 45, 55)
-
-    ctx.fillStyle = "rgba(255, 0, 0, 0.5)"
-    ctx.beginPath()
-    ctx.arc(30, 75, 6, 0, 2 * Math.PI)
-    ctx.fill()
-
-    ctx.fillStyle = "white"
-    ctx.fillText("Competitor", 45, 80)
-  }, [coordinates, center])
+  // Convert to LatLng objects after map is loaded
+  const heatmapData =
+    map && window.google
+      ? coordinates.map((c) => new window.google.maps.LatLng(c.lat, c.lng))
+      : [];
 
   return (
-    <div className="border rounded-md overflow-hidden bg-white">
-      <canvas ref={canvasRef} width={600} height={400} className="w-full h-auto" />
-    </div>
-  )
-}
+    <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!} libraries={["visualization"]}>
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={center}
+        zoom={13}
+        onLoad={setMap}
+      >
+        {map && <HeatmapLayer data={heatmapData} />}
+      </GoogleMap>
+    </LoadScript>
+  );
+};
 
 export default function HeatmapPage() {
   const router = useRouter()

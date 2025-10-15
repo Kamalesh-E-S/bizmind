@@ -24,5 +24,5 @@ export default function RootLayout({
 export const metadata = {
   title: "Market Research Dashboard",
   description: "AI-powered market research and business strategy platform",
-    generator: 'v0.dev'
+    generator: 'Tech Triad'
 }

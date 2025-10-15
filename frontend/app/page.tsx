@@ -10,7 +10,7 @@ export default function Home() {
           <nav className="flex justify-between items-center mb-16">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-8 w-8" />
-              <span className="text-2xl font-bold">MarketSense</span>
+              <span className="text-2xl font-bold">BizMind</span>
             </div>
             <div className="space-x-2">
               <Link href="/login">
