@@ -64,18 +64,6 @@ def init_db():
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 )
             ''')
-            # Create competitor_insights table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS competitor_insights (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    location TEXT NOT NULL,
-                    category TEXT NOT NULL,
-                    insight_data TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (user_id) REFERENCES users(id)
-                )
-            ''')
             # Create landmark_data table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS landmark_data (
@@ -100,8 +88,42 @@ def init_db():
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 )
             ''')
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS competitor_insights (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    location TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    total INTEGER,
+                    avg_rating REAL,
+                    avg_reviews REAL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+            ''')
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS competitor_places (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    insight_id INTEGER NOT NULL,
+                    name TEXT,
+                    place_id TEXT,
+                    lat REAL,
+                    lng REAL,
+                    rating REAL,
+                    user_ratings_total INTEGER,
+                    vicinity TEXT,
+                    types TEXT,
+                    positive_summary TEXT,
+                    negative_summary TEXT,
+                    positive_highlight TEXT,
+                    negative_highlight TEXT,
+                    FOREIGN KEY (insight_id) REFERENCES competitor_insights(id)
+                );
+            ''')
+
             conn.commit()
             logging.getLogger("market_research_api").info("Successfully initialized SQLite database")
     except Exception as e:
         logging.getLogger("market_research_api").error(f"Failed to initialize SQLite database: {e}")
         raise
+        

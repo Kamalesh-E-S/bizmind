@@ -6,6 +6,9 @@ from textblob import TextBlob
 from sumy.summarizers.text_rank import TextRankSummarizer
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
+from textblob import TextBlob
+from collections import Counter
+import re
 
 def get_gmaps_client():
     return googlemaps.Client(key=current_app.config['GOOGLE_MAPS_API_KEY'])
@@ -26,11 +29,7 @@ def geocode_location(location):
         return location_coords, None
     except Exception as e:
         return None, f"Geocoding error: {str(e)}"
-
-from textblob import TextBlob
-from collections import Counter
-import re
-
+        
 def summarize_for_llm(reviews, sentiment_type="positive"):
     """
     Create ultra-compact summary and highlight line for any business.
@@ -90,7 +89,6 @@ def summarize_for_llm(reviews, sentiment_type="positive"):
         highlight = f"Customers mainly complained about the {', '.join([k for k,v in aspects.items() if v]) or 'service quality'}."
 
     return compact_summary.strip(), highlight.strip()
-
 
 def get_place_reviews(place_id):
     """
@@ -163,8 +161,8 @@ def get_nearby_places(location, place_type=None, keyword=None, radius=None):
         for place in places_result.get('results', []):
             place_id = place.get('place_id')
             top_reviews, least_reviews, summaries = get_place_reviews(place_id)
-            print("Good reviews summary:", summaries["positive_summary"],"\n",summaries["positive_highlight"])
-            print("Bad reviews summary:", summaries["negative_summary"],"\n",summaries["negative_highlight"])
+            # print("Good reviews summary:", summaries["positive_summary"],"\n",summaries["positive_highlight"])
+            # print("Bad reviews summary:", summaries["negative_summary"],"\n",summaries["negative_highlight"])
             places.append({
                 'name': place.get('name'),
                 'place_id': place_id,
@@ -175,7 +173,8 @@ def get_nearby_places(location, place_type=None, keyword=None, radius=None):
                 'vicinity': place.get('vicinity'),
                 'types': place.get('types', []),
                 'top_reviews': top_reviews,
-                'least_reviews': least_reviews
+                'least_reviews': least_reviews,
+                'summaries': summaries
             })
             # Sleep to avoid hitting rate limits
             time.sleep(0.2)

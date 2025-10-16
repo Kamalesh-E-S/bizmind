@@ -25,3 +25,5 @@ def call_groq_ai(prompt, system_message="You are a helpful business advisor."):
         return f"HTTP error from Groq API: {e}"
     except Exception as e:
         return f"Unexpected error: {e}"
+
+
